@@ -1,0 +1,118 @@
+/* ============================================================
+   DESIGN SYSTEM — Milano Cortina 2026
+   Palette olimpica, tipografia display, reset CSS
+
+   Font scelti:
+   - Archivo Black: titoli enormi, impatto visivo massimo
+   - Space Grotesk: UI, body, tutto il resto
+   Entrambi free su Google Fonts, ottimi per estetica 2026.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* ── Variabili CSS globali ───────────────────────────────── */
+:root {
+	/* Colori principali */
+	--color-bg-dark:   #0A0A0A;
+	--color-bg-light:  #FAFAF7;
+	--color-white:     #FFFFFF;
+	--color-blue-ice:  #5BC0F8;
+	--color-red:       #E63946;
+	--color-gray-100:  #F0EFEA;
+	--color-gray-400:  #88887C;
+	--color-gray-700:  #3A3A35;
+
+	/* Font */
+	--font-display: 'Archivo Black', sans-serif;
+	--font-ui:      'Space Grotesk', sans-serif;
+
+	/* Spaziatura */
+	--space-xs:  0.5rem;
+	--space-sm:  1rem;
+	--space-md:  2rem;
+	--space-lg:  4rem;
+	--space-xl:  8rem;
+	--space-2xl: 12rem;
+
+	/* Container */
+	--container-max:     1400px;
+	--container-pad:     clamp(1.5rem, 5vw, 4rem);
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	font-size: 16px;
+	scroll-behavior: smooth;
+}
+
+body {
+	font-family: var(--font-ui);
+	background-color: var(--color-bg-dark);
+	color: var(--color-white);
+	line-height: 1.6;
+	overflow-x: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Tipografia base ────────────────────────────────────── */
+h1, h2, h3, h4 {
+	font-family: var(--font-display);
+	line-height: 0.92;
+	letter-spacing: -0.03em;
+}
+
+p {
+	font-family: var(--font-ui);
+	font-weight: 400;
+	line-height: 1.75;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+}
+
+/* ── Utility ────────────────────────────────────────────── */
+.container {
+	max-width: var(--container-max);
+	margin: 0 auto;
+	padding: 0 var(--container-pad);
+}
+
+/* Classe usata da GSAP: nasconde elementi prima dell'animazione
+   Importante: visibility: hidden non crea layout shift come display: none */
+.gsap-fade-init {
+	opacity: 0;
+}
+
+/* Separatore decorativo usato tra sezioni */
+.section-label {
+	font-family: var(--font-ui);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.25em;
+	text-transform: uppercase;
+	color: var(--color-gray-400);
+}
+
+/* Linea decorativa */
+.deco-line {
+	display: block;
+	width: 40px;
+	height: 1px;
+	background: var(--color-blue-ice);
+}
