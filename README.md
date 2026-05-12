@@ -5,6 +5,101 @@ Una single page a tema Olimpiadi Invernali che mostra i principali pattern GSAP 
 
 ---
 
+## Creare un progetto da zero
+
+Questa sezione spiega come ricreare la base del progetto partendo da zero.  
+Segui i passaggi in ordine — ci vogliono circa 5 minuti.
+
+### 1. Crea il progetto SvelteKit
+
+```bash
+npx sv create nome-progetto
+```
+
+Il CLI chiede alcune opzioni. Per questo stack scegli:
+- **Template**: `SvelteKit minimal`
+- **Type checking**: `None` ← niente TypeScript, JavaScript puro
+- **Add-ons**: nessuno (li installiamo manualmente dopo)
+
+Poi entra nella cartella:
+
+```bash
+cd nome-progetto
+```
+
+### 2. Installa GSAP
+
+```bash
+npm install gsap
+```
+
+GSAP è un singolo pacchetto. **ScrollTrigger è incluso gratuitamente** nel pacchetto base dal 2025 — non serve nessuna licenza Club GSAP.
+
+Per usarlo in un componente Svelte, ricorda sempre di registrare il plugin **una volta sola** all'avvio:
+
+```js
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
+```
+
+> In questo progetto la registrazione è centralizzata in `src/lib/animations/gsap-utils.js`  
+> così ogni componente importa da lì e non rischia di registrare il plugin due volte.
+
+### 3. Installa Threlte e Three.js
+
+Threlte è il wrapper Svelte per Three.js. Servono due pacchetti:
+
+```bash
+npm install three @threlte/core @threlte/extras
+```
+
+| Pacchetto | Ruolo |
+|---|---|
+| `three` | La libreria 3D (geometrie, materiali, luci, renderer) |
+| `@threlte/core` | Componenti Svelte che wrappano Three.js dichiarativamente |
+| `@threlte/extras` | Componenti extra opzionali (Float, ContactShadows, ecc.) |
+
+> `@threlte/extras` è opzionale — serve solo se usi componenti avanzati come `Environment` o `Float`.  
+> In questo progetto viene importato ma non usato attivamente, quindi puoi ometterlo se vuoi.
+
+### 4. (Opzionale) Installa @types/node
+
+SvelteKit genera internamente un `tsconfig.json` che referenzia i tipi Node.js.  
+Anche in un progetto JavaScript puro, installarli evita errori segnalati dall'editor:
+
+```bash
+npm install --save-dev @types/node
+```
+
+### 5. Struttura delle cartelle consigliata
+
+```
+src/
+├── routes/
+│   └── +page.svelte          # La pagina
+├── lib/
+│   ├── components/           # Componenti Svelte
+│   ├── animations/
+│   │   └── gsap-utils.js     # Registrazione GSAP + helper
+│   └── stores/               # Store con runes Svelte 5
+└── app.css                   # Design system globale
+```
+
+### Riepilogo comandi
+
+```bash
+npx sv create nome-progetto   # crea progetto (scegli: minimal, no TypeScript)
+cd nome-progetto
+npm install gsap
+npm install three @threlte/core @threlte/extras
+npm install --save-dev @types/node
+npm run dev                   # avvia il dev server
+```
+
+---
+
 ## Avvio rapido
 
 ```bash
