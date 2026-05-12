@@ -1,139 +1,88 @@
 <!--
   Mascot.svelte
-  Contenuto della scena Threlte: cristallo iridescente con anelli orbitanti.
+  Scena Threlte: i 5 cerchi olimpici in 3D con colori ufficiali.
 
-  Questo componente vive DENTRO un <Canvas> di Threlte.
-  Non è usabile standalone — va importato dentro ThreeDScene.svelte.
+  Costruito con primitive Three.js:
+  - TorusGeometry: ogni cerchio è un toro orientato verticalmente (rotation.x = PI/2)
+  - MeshStandardMaterial: metalness leggero per un po' di lustro senza perdere i colori
+  - PerspectiveCamera: Threlte aggiorna automaticamente l'aspect ratio al resize del canvas
 
-  Il modello 3D è costruito interamente con primitive Three.js:
-  - IcosahedronGeometry: il cristallo centrale (20 facce, aspetto gemma)
-  - TorusGeometry: 3 anelli orbitanti a inclinazioni diverse
+  Perché FOV=60?
+  Durante la rotazione Y, il modello proietta una larghezza maggiore di quella frontale
+  (i bordi del toro si sommano alla profondità Z del gruppo inclinato).
+  Con FOV=60 + camera a z=5 il frustum è abbastanza ampio da contenere il modello
+  in qualsiasi angolo di rotazione senza mai clipparlo.
 
-  Materiali usati:
-  - MeshPhysicalMaterial con iridescence: effetto arcobaleno/iridescente
-  - MeshStandardMaterial per gli anelli: metallic + emissive glow
+  Responsive: Threlte aggiorna automaticamente camera.aspect quando il canvas
+  viene ridimensionato (via ResizeObserver → updateCamera interno). Non serve gestirlo
+  manualmente con useTask — sarebbe ridondante.
 
   Per riutilizzare:
-  - Importa questo componente dentro un <Canvas> di @threlte/core
-  - Modifica le props di geometry/material per cambiare aspetto
-  - useFrame() è il loop di animazione — eseguito ogni frame via requestAnimationFrame
+  - Aggiungi un po' di inclinazione al T.Group (rotation.x) per senso di profondità
+  - FOV generoso (55–65) previene il clipping durante rotazioni Y
 -->
 
 <script>
 	import { T, useTask } from '@threlte/core';
 
-	// Riferimenti agli oggetti Three.js (settati da bind:ref nei template)
-	// Non usiamo $state perché questi valori non pilotano reattività Svelte —
-	// vengono letti solo dentro useFrame() che è un loop manuale.
-	let crystalMesh;
-	let ring1Mesh;
-	let ring2Mesh;
-	let ring3Mesh;
+	// Colori ufficiali CIO per i 5 cerchi
+	const RINGS = [
+		{ color: '#0081C8' }, // 1 — Blu
+		{ color: '#FCB131' }, // 2 — Giallo
+		{ color: '#000000' }, // 3 — Nero
+		{ color: '#00A651' }, // 4 — Verde
+		{ color: '#EE334E' }, // 5 — Rosso
+	];
+
+	// Geometria: raggio anello, spessore tubo, spaziatura
+	const R  = 0.62;   // raggio del toro (centro → centro del tubo)
+	const TK = 0.068;  // raggio del tubo (spessore visivo)
+	const SX = 0.55;   // spaziatura orizzontale tra centri (< 2R = sovrapposizione olimpica)
+	const SY = 0.32;   // offset verticale tra le due file
+
+	// 5 posizioni [x, y, z]
+	const positions = [
+		[-SX * 2, +SY, -0.12], // 1 — Blu
+		[-SX,     -SY, 0.12], // 2 — Giallo
+		[0,       +SY, 0], // 3 — Nero
+		[+SX,     -SY, 0.22], // 4 — Verde
+		[+SX * 2, +SY, -0.12], // 5 — Rosso
+	];
+
+	// Riferimento al gruppo per la rotazione
 	let groupRef;
 
-	// useTask: callback eseguita a ogni frame (60fps idealmente). In Threlte 8
-	// si chiama useTask (rinominato rispetto a useFrame delle versioni precedenti).
-	// `delta` è il tempo in secondi dall'ultimo frame — usalo per animazioni
-	// frame-rate independent (moltiplicare velocità × delta invece di usare valori fissi).
 	useTask((delta) => {
-		// Rotazione del cristallo: lenta sul Y, lentissima sull'X per un moto "galleggiante"
-		if (crystalMesh) {
-			crystalMesh.rotation.y += delta * 0.5;
-			crystalMesh.rotation.x += delta * 0.08;
-		}
-
-		// Ogni anello ruota a velocità e direzione diversa per un effetto cinetico
-		if (ring1Mesh) ring1Mesh.rotation.z += delta * 0.4;
-		if (ring2Mesh) ring2Mesh.rotation.z -= delta * 0.25;
-		if (ring3Mesh) ring3Mesh.rotation.y += delta * 0.3;
+		if (groupRef) groupRef.rotation.y += delta * 0.35;
 	});
 </script>
 
-<!-- Camera prospettica: makeDefault la rende la camera attiva della scena -->
-<T.PerspectiveCamera makeDefault position={[0, 0, 6]} fov={45} />
+<!--
+	FOV=60 + z=5: visuale ampia che contiene il modello anche agli angoli più estremi.
+	Threlte aggiorna automaticamente camera.aspect al resize (non serve farlo manualmente).
+-->
+<T.PerspectiveCamera makeDefault fov={60} position={[0, 0, 5]} near={0.1} far={50} />
 
-<!-- Luci della scena: ambient per base, poi due point light colorati per mood olimpico -->
-<T.AmbientLight intensity={0.4} color="#ffffff" />
+<!-- Luci: ambient per base + directional per ombre morbide + point frontale -->
+<T.AmbientLight intensity={0.65} />
+<T.DirectionalLight position={[4, 5, 6]} intensity={1.8} color="#ffffff" />
+<T.PointLight position={[0, 0, 5]} intensity={0.8} color="#ffffff" />
 
-<!-- Luce direzionale principale (simula il sole) -->
-<T.DirectionalLight
-	position={[4, 6, 5]}
-	intensity={2}
-	color="#ffffff"
-/>
+<!--
+	rotation.x={0.14} = ~8° di inclinazione: dà profondità senza aumentare troppo
+	la larghezza proiettata durante la rotazione Y (era 12° = 0.21, causa del clipping).
+-->
+<T.Group bind:ref={groupRef} rotation.x={0.14}>
 
-<!-- Point light blu ghiaccio — riflessa sul cristallo, crea il look "invernale" -->
-<T.PointLight
-	position={[-4, 3, 4]}
-	color="#5BC0F8"
-	intensity={8}
-	distance={20}
-/>
-
-<!-- Point light rosso olimpico — complementare al blu, crea profondità cromatica -->
-<T.PointLight
-	position={[3, -3, -3]}
-	color="#E63946"
-	intensity={4}
-	distance={15}
-/>
-
-<!-- Gruppo radice: tutto il modello può essere trasformato insieme se serve -->
-<T.Group bind:ref={groupRef}>
-
-	<!-- CRISTALLO CENTRALE: IcosahedronGeometry con MeshPhysicalMaterial iridescente.
-	     IcosahedronGeometry(raggio, dettaglio): dettaglio=1 dà 80 facce (gemma sfaccettata).
-	     MeshPhysicalMaterial è il materiale più avanzato di Three.js — supporta
-	     transmission (vetro), iridescence (effetto arcobaleno), clearcoat, ecc. -->
-	<T.Mesh bind:ref={crystalMesh}>
-		<T.IcosahedronGeometry args={[1, 1]} />
-		<T.MeshPhysicalMaterial
-			color="#DDECFF"
-			metalness={0.1}
-			roughness={0.05}
-			iridescence={1}
-			iridescenceIOR={1.5}
-			iridescenceThicknessRange={[100, 800]}
-			reflectivity={1}
-			clearcoat={1}
-			clearcoatRoughness={0}
-		/>
-	</T.Mesh>
-
-	<!-- ANELLO 1: orizzontale (piano XZ), blu ghiaccio emissivo -->
-	<T.Mesh bind:ref={ring1Mesh} rotation.x={Math.PI / 2}>
-		<T.TorusGeometry args={[1.9, 0.022, 8, 120]} />
-		<T.MeshStandardMaterial
-			color="#5BC0F8"
-			metalness={1}
-			roughness={0}
-			emissive="#5BC0F8"
-			emissiveIntensity={0.6}
-		/>
-	</T.Mesh>
-
-	<!-- ANELLO 2: inclinato a 45°, bianco (quasi invisibile, fa da struttura) -->
-	<T.Mesh bind:ref={ring2Mesh} rotation.x={Math.PI / 4} rotation.z={Math.PI / 6}>
-		<T.TorusGeometry args={[2.4, 0.014, 8, 120]} />
-		<T.MeshStandardMaterial
-			color="#FFFFFF"
-			metalness={0.9}
-			roughness={0.05}
-			emissive="#AACCFF"
-			emissiveIntensity={0.2}
-		/>
-	</T.Mesh>
-
-	<!-- ANELLO 3: verticale (piano XY), rosso olimpico emissivo -->
-	<T.Mesh bind:ref={ring3Mesh} rotation.z={Math.PI / 2} rotation.x={Math.PI / 6}>
-		<T.TorusGeometry args={[2.8, 0.018, 8, 120]} />
-		<T.MeshStandardMaterial
-			color="#E63946"
-			metalness={1}
-			roughness={0}
-			emissive="#E63946"
-			emissiveIntensity={0.4}
-		/>
-	</T.Mesh>
+	{#each RINGS as ring, i}
+		<T.Mesh position={positions[i]}>
+			<T.TorusGeometry args={[R, TK, 24, 120]} />
+			<T.MeshStandardMaterial
+				color={ring.color}
+				metalness={0.25}
+				roughness={0.45}
+			/>
+		</T.Mesh>
+	{/each}
 
 </T.Group>
