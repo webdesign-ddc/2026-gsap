@@ -42,10 +42,12 @@
 				}
 			});
 
-			// Canvas: da top-right (posizione CSS) verso bottom-left
+			// Canvas: da top-right verso bottom-left.
+			// -52vw sposta il canvas dal lato destro al sinistro (canvas è 46vw wide,
+			// parte a right:2vw → left edge a 52vw → posizione speculare a sinistra con left:2vw).
 			tl.fromTo(canvasWrapper,
 				{ x: 0,       y: 0 },
-				{ x: '-50vw', y: '35vh', ease: 'none', duration: 2 }
+				{ x: '-52vw', y: '38vh', ease: 'none', duration: 2 }
 			);
 
 			// TextBlock1 (sinistra): esce nella prima metà
@@ -180,19 +182,24 @@
 		font-weight: 600;
 	}
 
-	/* Canvas: parte top-right, GSAP applica transform per spostarlo */
+	/* Canvas: parte top-right, GSAP applica transform per spostarlo.
+	   aspect-ratio: 16/10 mantiene proporzioni coerenti su qualsiasi viewport.
+	   La width guida il sizing, l'altezza segue automaticamente.
+	   Questo garantisce che la camera responsive in Mascot.svelte
+	   riceva sempre un aspect ratio prevedibile. */
 	.canvas-wrapper {
 		position: absolute;
-		top: 5vh;
-		right: 3vw;
-		width: 44vw;
-		height: 60vh;
+		top: 4vh;
+		right: 2vw;
+		width: 46vw;
+		aspect-ratio: 16 / 10;
 		will-change: transform;
 	}
 
 	.canvas-wrapper :global(canvas) {
 		width: 100% !important;
 		height: 100% !important;
+		display: block;
 	}
 
 	@media (max-width: 900px) {

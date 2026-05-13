@@ -20,7 +20,8 @@
 	import { gsap } from '$lib/animations/gsap-utils.js';
 
 	let section;
-	let titleLine1;   // "MILANO · CORTINA"
+	let titleLine1;   // "MILANO ·"
+	let titleLine1b;  // "CORTINA"
 	let titleLine2;   // "2026"
 	let subtitle;
 	let scrollIndicator;
@@ -54,25 +55,34 @@
 		// Questo previene memory leak e animazioni orfane — FONDAMENTALE in SvelteKit.
 		const ctx = gsap.context(() => {
 
-			// Split del testo nelle due righe del titolo
-			const chars1 = splitInChars(titleLine1);
-			const chars2 = splitInChars(titleLine2);
+			// Split del testo nelle tre righe del titolo
+			const chars1  = splitInChars(titleLine1);
+			const chars1b = splitInChars(titleLine1b);
+			const chars2  = splitInChars(titleLine2);
 
 			// PATTERN PRINCIPALE: gsap.timeline() per orchestrare la sequenza
 			// Il timeline esegue le animazioni in ordine, con overlap tramite "<" e offset numerici.
 			const tl = gsap.timeline({ delay: 0.2 });
 
-			// Step 1: la prima riga del titolo entra dal basso, lettera per lettera
+			// Step 1a: "MILANO ·" entra dal basso, lettera per lettera
 			tl.from(chars1, {
 				yPercent: 110,
 				opacity: 0,
 				duration: 0.8,
-				stagger: 0.025,  // ogni lettera parte 25ms dopo la precedente
+				stagger: 0.025,
 				ease: 'power4.out'
 			});
 
-			// Step 2: la seconda riga ("2026") parte leggermente sovrapposta alla fine di step 1
-			// "<-0.3" significa: inizia 0.3s prima della fine dell'animazione precedente
+			// Step 1b: "CORTINA" parte leggermente sovrapposta, stessa estetica
+			tl.from(chars1b, {
+				yPercent: 110,
+				opacity: 0,
+				duration: 0.8,
+				stagger: 0.025,
+				ease: 'power4.out'
+			}, '<-0.3');
+
+			// Step 2: "2026" — lettere più rade, stagger più largo
 			tl.from(chars2, {
 				yPercent: 110,
 				opacity: 0,
@@ -127,7 +137,8 @@
 		<!-- Titolo spezzato in due righe per il split diversificato -->
 		<!-- overflow: hidden nasconde le lettere che animano da yPercent: 110 -->
 		<h1 class="hero-title">
-			<span class="title-line" bind:this={titleLine1}>MILANO · CORTINA</span>
+			<span class="title-line" bind:this={titleLine1}>MILANO ·</span>
+			<span class="title-line" bind:this={titleLine1b}>CORTINA</span>
 			<span class="title-line title-year" bind:this={titleLine2}>2026</span>
 		</h1>
 
